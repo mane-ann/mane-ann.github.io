@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LitArt</title>
+    <style>
+        /* CSS Styling */
+        :root {
+            --bg-color: #0f141e; /* Dark, immersive background */
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+
+            /* --- STORY TYPE COLORS --- */
+            --color-short-story: #ab3bf6; /* Deep Blue */
+            --color-essay: #f5650b;       /* Amber */
+            --color-poem: #0bb86d;        /* Green */
+            --color-other: #4d6dac;       /* Silver */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling, 3D canvas fills screen */
+            background-color: var(--bg-color);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-main);
+        }
+
+        /* Header Navigation */
+        header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to canvas where needed */
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        nav {
+            pointer-events: auto;
+        }
+
+        nav a {
+            color: var(--text-main);
+            text-decoration: none;
+            margin-left: 30px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+        }
+
+        /* Tooltip for hovering over stories */
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            pointer-events: none; /* Very important so it doesn't block raycasting */
+            display: none;
+            z-index: 20;
+            transform: translate(-50%, -150%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Footer Legend */
+        footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        .legend span {
+            margin: 0 10px;
+        }
+        
+        .color-box {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+
+        #about-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 20, 30, 0.98); /* Deep dark background */
+            color: #ffffff;
+            display: none; /* Hidden by default */
+            z-index: 9999;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 100px auto;
+            padding: 0 40px;
+            line-height: 1.8;
+        }
+
+        .about-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        .about-header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .close-x {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-x:hover {
+            background: #4cc9f0;
+            border-color: #4cc9f0;
+            transform: rotate(90deg);
+        }
+
+        .about-body p {
+            font-size: 1.1rem;
+            color: #cccccc;
+            margin-bottom: 25px;
+        }
+
+        .about-body strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .accent-line {
+            width: 50px;
+            height: 2px;
+            background: #4cc9f0;
+            margin-bottom: 30px;
+        }
+
+
+        .studio-link {
+            color: inherit;         /* Takes the color of the parent text */
+            text-decoration: none;  /* Removes the default underline */
+            pointer-events: auto;   /* Makes it clickable despite the footer's settings */
+            transition: opacity 0.3s ease; /* Smooth transition for the hover effect */
+        }
+
+        .studio-link:hover {
+            opacity: 1;             /* Becomes slightly brighter when hovered */
+            text-decoration: none;  /* Keeps underline hidden even on hover */
+            color: #ffffff;         /* Optional: makes it pop just a tiny bit more on hover */
+        }
+
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <header>
+        <div class="logo">LitArt</div>
+        <nav>
+            <!--<a href="#">EXPLORE</a>
+            <a href="#">CREATE</a>-->
+            <a href="javascript:void(0)" onclick="openAbout(); return false;" style="color: white; cursor: pointer;">ABOUT</a>
+        </nav>
+    </header>
+
+    <div id="tooltip"></div>
+
+    <footer>
+        <div class="legend">
+        <span><span class="color-box" style="background: var(--color-short-story);"></span>Short Stories</span>
+        <span><span class="color-box" style="background: var(--color-essay);"></span>Essays</span>
+        <span><span class="color-box" style="background: var(--color-poem);"></span>Poems</span>
+        <span><span class="color-box" style="background: var(--color-other);"></span>Other</span>
+            <span style="margin-left: 20px;">| Drag to rotate sphere</span>
+
+        <div class="copyright" style="margin-top: 15px; letter-spacing: 1px; opacity: 0.6;">
+            Designed by 
+            <a href="https://awsteam.ca" class="studio-link">
+                <strong>Ash Wood Studios</strong>
+            </a> 
+            &copy; 2026. All rights reserved.
+        </div>
+
+        </div>
+    </footer>
+
+    <div class="legend">
+
+</div>
+
+<div id="about-overlay">
+    <div class="about-content">
+        <div class="about-header">
+            <h1>About LitArt</h1>
+            <button class="close-x" onclick="closeAbout()">&times;</button>
+        </div>
+
+        <div class="accent-line"></div>
+
+        <div class="about-body">
+            <p><strong>LitArt is a space for creating, exploring, and experimenting in Literary Art.</strong></p>
+
+            <p>We begin with the following premise: literature is not defined by whether something is real or imagined. It is defined by what it makes us feel.</p>
+
+            <p>Too often, writing is reduced to categories—fiction, essay, poetry, etc. These labels are useful, but they miss something essential. A story is not meaningful simply because it is invented, nor is an essay valuable simply because it is true. What matters is the transformation that happens through language: the shaping of experience into something that can be seen, heard, and felt.</p>
+
+            <p><strong>Here, writing is treated as an art form in its own right.</strong></p>
+
+            <p>Like a painter working with color and light, a writer composes with words. Through rhythm, image, and tone, language becomes more than communication—it becomes experience. A sentence can carry the weight of memory, the texture of a place, the sound of a voice, or the quiet tension of a thought not yet fully formed.</p>
+
+            <p>LitArt exists to host that kind of experience. At its best, literary art creates recognition and resonance. A reader encounters something novel, yet deeply known. A moment, a sensation, a thought—suddenly articulated with clarity. Something that existed without words is given form.</p>
+
+            <p><strong>That moment is the purpose of this space.</strong></p>
+
+            <p>The sphere you explore is not just a collection of texts. It is a field of perspectives—each fragment a different attempt to interpret, transform, and communicate experience. There is no single path through it. You navigate by curiosity, by intuition, by chance.</p>
+
+            <p>Our LitArt project is an open, ongoing experiment: in language, in perception, and in what literature can become.</p>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // 1. Scene & Setup
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0f141e, 0.02);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 35;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    // 2. Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(10, 20, 15);
+    scene.add(dirLight);
+
+    // 3. Globals
+    const rootStyles = getComputedStyle(document.documentElement);
+    const sphereGroup = new THREE.Group();
+    scene.add(sphereGroup);
+
+    let allTriangles = []; 
+    let storyLifeCycles = []; 
+    const clock = new THREE.Clock();
+
+    function getColorForType(type) {
+        let cssVar = '--color-other';
+        if (type === 'Short Story') cssVar = '--color-short-story';
+        else if (type === 'Essay') cssVar = '--color-essay';
+        else if (type === 'Poem') cssVar = '--color-poem';
+        return rootStyles.getPropertyValue(cssVar).trim() || "#e5e7eb";
+    }
+
+    // 4. Build the Sphere Structure
+    async function initLitArt() {
+        let storyData = [];
+        try {
+            const response = await fetch('stories.json');
+            // FIX: Added 'const' to rawData to prevent ReferenceError
+            const rawData = await response.json(); 
+            // Respect the 'show' attribute
+            storyData = rawData.filter(story => story.show === 1);
+        } catch (e) {
+            console.error("JSON load failed:", e);
+            return;
+        }
+
+        const radius = 10;
+        const baseGeom = new THREE.IcosahedronGeometry(radius, 3).toNonIndexed();
+        const positions = baseGeom.attributes.position.array;
+
+        for (let i = 0; i < positions.length; i += 9) {
+            const triGeom = new THREE.BufferGeometry();
+            triGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+                positions[i], positions[i+1], positions[i+2],
+                positions[i+3], positions[i+4], positions[i+5],
+                positions[i+6], positions[i+7], positions[i+8],
+            ]), 3));
+            triGeom.computeVertexNormals();
+
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.03,
+                roughness: 0.2,
+                metalness: 0.5,
+                depthWrite: false
+            });
+
+            const mesh = new THREE.Mesh(triGeom, material);
+            mesh.userData = { hasStory: false };
+
+            const edges = new THREE.EdgesGeometry(triGeom);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ 
+                color: 0xffffff, transparent: true, opacity: 0.02 
+            }));
+            mesh.add(line);
+
+            sphereGroup.add(mesh);
+            allTriangles.push(mesh);
+        }
+
+        storyLifeCycles = storyData.map(data => ({
+            data: data,
+            state: 'hidden',
+            timer: Math.random() * 3000, 
+            currentMesh: null
+        }));
+    }
+
+    // 5. Asynchronous Logic
+    function updateStoryLifeCycles(delta) {
+        storyLifeCycles.forEach(story => {
+            story.timer -= delta * 1000; 
+
+            switch (story.state) {
+                case 'hidden':
+                    if (story.timer <= 0) {
+                        assignNewLocation(story);
+                        story.state = 'fadingIn';
+                    }
+                    break;
+
+                case 'fadingIn':
+                    if (story.currentMesh) {
+                        story.currentMesh.material.opacity += 0.01;
+                        if (story.currentMesh.material.opacity >= 1.0) {
+                            story.state = 'visible';
+                            story.timer = Math.random() * 5000 + 3000; 
+                        }
+                    }
+                    break;
+
+                case 'visible':
+                    if (story.timer <= 0) {
+                        story.state = 'fadingOut';
+                    }
+                    break;
+
+                case 'fadingOut':
+                    if (story.currentMesh) {
+                        story.currentMesh.material.opacity -= 0.01;
+                        if (story.currentMesh.material.opacity <= 0.03) {
+                            resetMesh(story.currentMesh);
+                            story.currentMesh = null;
+                            story.state = 'hidden';
+                            story.timer = Math.random() * 4000 + 1000; 
+                        }
+                    }
+                    break;
+            }
+        });
+    }
+
+    function assignNewLocation(story) {
+        const available = allTriangles.filter(m => !m.userData.hasStory);
+        if (available.length === 0) return;
+
+        const mesh = available[Math.floor(Math.random() * available.length)];
+        const colStr = getColorForType(story.data.type);
+        const threeCol = new THREE.Color(colStr);
+
+        mesh.userData = { ...story.data, hasStory: true, baseColor: threeCol.getHex() };
+        mesh.material.color.copy(threeCol);
+        mesh.material.emissive.copy(threeCol);
+        mesh.material.emissiveIntensity = 0.5;
+        mesh.children[0].material.opacity = 0.4;
+        
+        story.currentMesh = mesh;
+    }
+
+    function resetMesh(mesh) {
+        mesh.userData = { hasStory: false };
+        mesh.material.color.setHex(0xffffff);
+        mesh.material.opacity = 0.03;
+        mesh.material.emissive.setHex(0x000000);
+        mesh.children[0].material.opacity = 0.02;
+    }
+
+    // 6. Interaction
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.2;
+    controls.enableDamping = true;
+
+    let startX = 0;
+    renderer.domElement.addEventListener('mousedown', (e) => startX = e.clientX);
+    renderer.domElement.addEventListener('mouseup', (e) => {
+        const deltaX = e.clientX - startX;
+        if (Math.abs(deltaX) > 10) controls.autoRotateSpeed = deltaX > 0 ? -0.2 : 0.2;
+    });
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const tooltip = document.getElementById('tooltip');
+    let hoveredMesh = null;
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        tooltip.style.left = e.clientX + 'px';
+        tooltip.style.top = e.clientY + 'px';
+    });
+
+    // 7. Consolidating into ONE animate function
+    function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        
+        controls.update();
+        if (storyLifeCycles.length > 0) {
+            updateStoryLifeCycles(delta);
+        }
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(sphereGroup.children);
+        const hits = intersects.filter(h => h.object.userData.hasStory && h.object.material.opacity > 0.5);
+
+        if (hits.length > 0) {
+            const obj = hits[0].object;
+            if (hoveredMesh !== obj) {
+                if (hoveredMesh) hoveredMesh.material.emissiveIntensity = 0.5;
+                hoveredMesh = obj;
+                hoveredMesh.material.emissiveIntensity = 1.2; 
+                const color = getColorForType(obj.userData.type);
+                tooltip.innerHTML = `
+                    <div style="border-left: 3px solid ${color}; padding-left: 8px;">
+                        <b style="color: ${color}; font-size: 0.6rem;">${obj.userData.type}</b><br>
+                        <strong>${obj.userData.title}</strong><br>
+                        <small>${obj.userData.author}</small>
+                    </div>
+                `;
+                tooltip.style.display = 'block';
+                document.body.style.cursor = 'pointer';
+            }
+        } else {
+            if (hoveredMesh) {
+                hoveredMesh.material.emissiveIntensity = 0.5;
+                hoveredMesh = null;
+                tooltip.style.display = 'none';
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        renderer.render(scene, camera);
+    }
+
+
+window.addEventListener('click', () => {
+    if (hoveredMesh && hoveredMesh.userData && hoveredMesh.userData.hasStory) {
+        const data = hoveredMesh.userData;
+        
+        if (data.content && data.content.trim() !== "") {
+            const themeColor = getColorForType(data.type);
+            const fileUrl = `content/${data.content}#toolbar=0&navpanes=0&scrollbar=0`;
+            
+            // 1. DETERMINE MEDIA TYPE
+            const isPDF = data.content.toLowerCase().endsWith('.pdf');
+            
+            // 2. CREATE DYNAMIC MEDIA TAG
+            // If PDF: Use <iframe> to embed the reader
+            // If Image: Use <img> for standard display
+            const mediaTag = isPDF 
+                ? `<iframe src="${fileUrl}" type="application/pdf"><\/iframe>`
+                : `<img src="${fileUrl}" alt="${data.title}">`;
+
+            const newWin = window.open("", "_blank");
+            
+            if (newWin) {
+                const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${data.title}<\/title>
+    <style>
+
+        .meta b { color: ${themeColor}; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; }
+        .meta h1 { margin: 0; font-size: 18px; font-weight: 400; color: #f3f4f6; }
+        
+        .close-btn { 
+            background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);
+            width: 30px; height: 30px; cursor: pointer; border-radius: 50%;
+            font-size: 24px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:hover { background: ${themeColor}; border-color: ${themeColor}; transform: rotate(90deg); }
+
+        body { 
+            margin: 0; padding: 0; background: #0f141e; color: white; 
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex; flex-direction: column; 
+            /* If it's a PDF, we lock the screen. If it's an image, we allow growth. */
+            height: ${isPDF ? '100vh' : 'auto'}; 
+            overflow: ${isPDF ? 'hidden' : 'auto'}; 
+        }
+
+        header { 
+            height: 70px; background: #0f141e; 
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; padding: 0 25px; z-index: 10;
+        }
+
+        main { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            /* If PDF, main shouldn't scroll. If Image, it should. */
+            overflow: ${isPDF ? 'hidden' : 'visible'}; 
+            width: 100%;
+        }
+
+        img { 
+            display: block;
+            max-width: 90%; 
+            height: auto; 
+            margin: 40px 0; /* Space at top and bottom */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5); 
+        }
+        
+        iframe { 
+            border: none; 
+            width: 100%; 
+            /* The PDF fills exactly what's left of the screen */
+            height: calc(100vh - 70px); 
+            display: block;
+        }
+        
+    <\/style>
+<\/head>
+<body>
+    <header>
+        <div class="meta">
+            <b>${data.type}<\/b>
+            <h1>by ${data.author}<\/h1>
+        <\/div>
+        <button class="close-btn" onclick="window.close()">&times;<\/button>
+    <\/header>
+    <main>
+        ${mediaTag}
+        
+        ${!isPDF ? `
+            <div style="height: 140px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.3; color: white; flex-shrink: 0;">
+                <div style="font-size: 10px; letter-spacing: 4px;">&mdash; END &mdash;</div>
+            </div>
+        ` : ''}
+    </main>
+<\/body>
+<\/html>`;
+
+                newWin.document.write(htmlContent);
+                newWin.document.close();
+            }
+        }
+    }
+});
+
+    // 7. Window Resize Handler
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // 8. Launch functions
+    initLitArt();
+    animate();
+
+
+
+// Attach to window so HTML onclick can find them
+window.openAbout = function() {
+    const about = document.getElementById('about-overlay');
+    if (about) {
+        about.style.display = 'block';
+        // Optional: stop background scrolling when open
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeAbout = function() {
+    const about = document.getElementById('about-overlay');
+    if (about) {
+        about.style.display = 'none';
+        // Restore scrolling
+        document.body.style.overflow = 'auto';
+    }
+};
+
+
+</script>
+</body>
+</html>
