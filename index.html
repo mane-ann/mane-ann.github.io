@@ -21,7 +21,7 @@
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevent scrolling, 3D canvas fills screen */
+            overflow: hidden; 
             background-color: var(--bg-color);
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text-main);
@@ -38,7 +38,7 @@
             align-items: center;
             box-sizing: border-box;
             z-index: 10;
-            pointer-events: none; /* Let clicks pass through to canvas where needed */
+            pointer-events: none; 
         }
 
         .logo {
@@ -74,7 +74,7 @@
             padding: 10px 15px;
             border-radius: 6px;
             font-size: 0.85rem;
-            pointer-events: none; /* Very important so it doesn't block raycasting */
+            pointer-events: none; 
             display: none;
             z-index: 20;
             transform: translate(-50%, -150%);
@@ -87,24 +87,65 @@
             position: absolute;
             bottom: 0;
             width: 100%;
-            padding: 20px;
+            box-sizing: border-box; 
             text-align: center;
             font-size: 0.8rem;
             color: var(--text-muted);
             z-index: 10;
+            background: linear-gradient(to top, rgba(15, 20, 30, 0.9), transparent);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
         }
 
-        .legend span {
-            margin: 0 10px;
+        .legend {
+            display: flex;
+            flex-wrap: wrap; 
+            justify-content: center;
+            gap: 5px; 
+            align-items: center;
+            font-size: 0.75rem;
+            width: 100%
         }
-        
+
+
+
+        .copyright {
+            margin-top: 10px;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            text-align: center; 
+            width: 100%;
+            padding: 0 0 20px 0;
+        }
+
+
+  
+        .legend span {
+            display: flex;   
+            align-items: center;    
+            white-space: nowrap;    
+            margin: 5px 10px;      
+            pointer-events: auto;
+        }
+
+
         .color-box {
             display: inline-block;
             width: 10px;
             height: 10px;
-            margin-right: 5px;
+            margin-right: 5px;    
             border-radius: 2px;
+            flex-shrink: 0;      
         }
+
+
+
+
+
+
 
         #about-overlay {
             position: fixed;
@@ -112,9 +153,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 20, 30, 0.98); /* Deep dark background */
+            background: rgba(15, 20, 30, 0.98); 
             color: #ffffff;
-            display: none; /* Hidden by default */
+            display: none; 
             z-index: 9999;
             overflow-y: auto;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -183,17 +224,56 @@
 
 
         .studio-link {
-            color: inherit;         /* Takes the color of the parent text */
-            text-decoration: none;  /* Removes the default underline */
-            pointer-events: auto;   /* Makes it clickable despite the footer's settings */
-            transition: opacity 0.3s ease; /* Smooth transition for the hover effect */
+            color: inherit;         
+            text-decoration: none;  
+            pointer-events: auto;   
+            transition: opacity 0.3s ease; 
         }
 
         .studio-link:hover {
-            opacity: 1;             /* Becomes slightly brighter when hovered */
-            text-decoration: none;  /* Keeps underline hidden even on hover */
-            color: #ffffff;         /* Optional: makes it pop just a tiny bit more on hover */
+            opacity: 1;             
+            text-decoration: none;  
+            color: #ffffff;         
         }
+
+
+
+        .mobile-only {
+            display: none;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+            }
+            .logo {
+                font-size: 1.2rem;
+            }
+            .about-header h1 {
+                font-size: 1.5rem; 
+            }
+            .about-content {
+                margin: 40px auto;
+                padding: 0 20px;
+            }
+            footer {
+                font-size: 0.7rem;
+                padding: 10px;
+            }
+            .legend span {
+                display: block;
+                margin: 5px 0;
+            }
+
+            .mobile-only {
+                display: inline-block; /* Or 'block' depending on layout */
+            }
+        }
+
+
+
+        
 
     </style>
 
@@ -211,8 +291,6 @@
     <header>
         <div class="logo">LitArt</div>
         <nav>
-            <!--<a href="#">EXPLORE</a>
-            <a href="#">CREATE</a>-->
             <a href="javascript:void(0)" onclick="openAbout(); return false;" style="color: white; cursor: pointer;">ABOUT</a>
         </nav>
     </header>
@@ -221,10 +299,10 @@
 
     <footer>
         <div class="legend">
-        <span><span class="color-box" style="background: var(--color-short-story);"></span>Short Stories</span>
-        <span><span class="color-box" style="background: var(--color-essay);"></span>Essays</span>
-        <span><span class="color-box" style="background: var(--color-poem);"></span>Poems</span>
-        <span><span class="color-box" style="background: var(--color-other);"></span>Other</span>
+        <span><div class="color-box" style="background: var(--color-short-story);"></div>Short Stories</span>
+        <span><div class="color-box" style="background: var(--color-essay);"></div>Essays</span>
+        <span><div class="color-box" style="background: var(--color-poem);"></div>Poems</span>
+        <span><div class="color-box" style="background: var(--color-other);"></div>Other</span>
             <span style="margin-left: 20px;">| Drag to rotate sphere</span>
 
         <div class="copyright" style="margin-top: 15px; letter-spacing: 1px; opacity: 0.6;">
@@ -317,9 +395,7 @@
         let storyData = [];
         try {
             const response = await fetch('stories.json');
-            // FIX: Added 'const' to rawData to prevent ReferenceError
             const rawData = await response.json(); 
-            // Respect the 'show' attribute
             storyData = rawData.filter(story => story.show === 1);
         } catch (e) {
             console.error("JSON load failed:", e);
@@ -484,13 +560,16 @@
                 hoveredMesh = obj;
                 hoveredMesh.material.emissiveIntensity = 1.2; 
                 const color = getColorForType(obj.userData.type);
+
                 tooltip.innerHTML = `
                     <div style="border-left: 3px solid ${color}; padding-left: 8px;">
-                        <b style="color: ${color}; font-size: 0.6rem;">${obj.userData.type}</b><br>
+                        <b style="color: ${color}; font-size: 0.7rem;">${obj.userData.type}</b><br>
                         <strong>${obj.userData.title}</strong><br>
-                        <small>${obj.userData.author}</small>
+                        <small>by ${obj.userData.author}</small><br>
+                        <div class="mobile-only" style="margin-top: 5px; color: ${color}; font-size: 0.4rem; font-weight: bold; letter-spacing: 1px;">TAP TO READ</div>
                     </div>
                 `;
+
                 tooltip.style.display = 'block';
                 document.body.style.cursor = 'pointer';
             }
@@ -519,8 +598,6 @@ window.addEventListener('click', () => {
             const isPDF = data.content.toLowerCase().endsWith('.pdf');
             
             // 2. CREATE DYNAMIC MEDIA TAG
-            // If PDF: Use <iframe> to embed the reader
-            // If Image: Use <img> for standard display
             const mediaTag = isPDF 
                 ? `<iframe src="${fileUrl}" type="application/pdf"><\/iframe>`
                 : `<img src="${fileUrl}" alt="${data.title}">`;
@@ -537,12 +614,13 @@ window.addEventListener('click', () => {
     <style>
 
         .meta b { color: ${themeColor}; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; }
-        .meta h1 { margin: 0; font-size: 18px; font-weight: 400; color: #f3f4f6; }
+        .meta h1 { margin: 0; font-size: 14px; font-weight: 400; color: #f3f4f6; }
         
+
         .close-btn { 
             background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);
-            width: 30px; height: 30px; cursor: pointer; border-radius: 50%;
-            font-size: 24px; display: flex; align-items: center; justify-content: center;
+            width: 44px; height: 44px; cursor: pointer; border-radius: 50%;
+            font-size: 28px; display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
         }
         .close-btn:hover { background: ${themeColor}; border-color: ${themeColor}; transform: rotate(90deg); }
@@ -556,10 +634,11 @@ window.addEventListener('click', () => {
             overflow: ${isPDF ? 'hidden' : 'auto'}; 
         }
 
+
         header { 
-            height: 70px; background: #0f141e; 
+            height: 60px; background: #0f141e; 
             display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; padding: 0 25px; z-index: 10;
+            position: sticky; top: 0; padding: 0 15px; z-index: 10;
         }
 
         main { 
@@ -574,9 +653,9 @@ window.addEventListener('click', () => {
 
         img { 
             display: block;
-            max-width: 90%; 
+            max-width: 95%; 
             height: auto; 
-            margin: 40px 0; /* Space at top and bottom */
+            margin: 20px 0; /* Space at top and bottom */
             box-shadow: 0 20px 60px rgba(0,0,0,0.5); 
         }
         
@@ -584,7 +663,7 @@ window.addEventListener('click', () => {
             border: none; 
             width: 100%; 
             /* The PDF fills exactly what's left of the screen */
-            height: calc(100vh - 70px); 
+            height: calc(100vh - 60px); 
             display: block;
         }
         
@@ -635,7 +714,6 @@ window.openAbout = function() {
     const about = document.getElementById('about-overlay');
     if (about) {
         about.style.display = 'block';
-        // Optional: stop background scrolling when open
         document.body.style.overflow = 'hidden';
     }
 };
@@ -644,7 +722,6 @@ window.closeAbout = function() {
     const about = document.getElementById('about-overlay');
     if (about) {
         about.style.display = 'none';
-        // Restore scrolling
         document.body.style.overflow = 'auto';
     }
 };

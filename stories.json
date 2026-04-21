@@ -13,8 +13,9 @@
   { "title": "Deep Pulse", "author": "Ann Mane", "type": "Poem", "show": 1, "content": "deep.jpg" },
   { "title": "Warm Heart, Cold Hands", "author": "Tatiana Lenskaia", "type": "Short Story", "show": 1, "content": "WarmHeart_ColdHands.pdf" },
   { "title": "Backswish", "author": "Tatiana Lenskaia", "type": "Poem", "show": 1, "content": "Backswish.jpg" },
-  { "title": "Soul Veil", "author": "Tatiana Lenskaia", "type": "Poem", "show": 0, "content": "SoulVeil.jpg" },
+  { "title": "Soul Veil", "author": "Tatiana Lenskaia", "type": "Poem", "show": 1, "content": "SoulVeil.pdf" },
   { "title": "The Weight of Love", "author": "Tatiana Lenskaia", "type": "Poem", "show": 1, "content": "wfs.jpg" },
   { "title": "The Mind River", "author": "Tatiana Lenskaia", "type": "Poem", "show": 1, "content": "MindRiver.pdf" },
-  { "title": "Two Shores", "author": "Ann Mane", "type": "Poem", "show": 0, "content": "TwoShores.pdf" }
+  { "title": "Two Shores", "author": "Ann Mane", "type": "Poem", "show": 1, "content": "TwoShores.pdf" },
+  { "title": "When Ships Must Graze", "author": "Ann Mane", "type": "Short Story", "show": 1, "content": "ShipSheep.pdf" }
 ]
